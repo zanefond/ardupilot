@@ -1,0 +1,41 @@
+name: Build ZEROH743 Firmware
+
+on:
+  push:
+    branches:
+      - build-zeroh743
+  workflow_dispatch:
+
+concurrency:
+  group: build-zeroh743-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    container: ardupilot/ardupilot-dev-chibios:v0.2.0
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Build Bootloader and ArduPlane (Fixed-Wing & VTOL/QuadPlane)
+        shell: bash
+        run: |
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
+          export PATH="/usr/lib/ccache:/opt/gcc-arm-none-eabi-10/bin:/github/home/.local/bin:$PATH"
+          python3 ./Tools/scripts/build_bootloaders.py ZEROH743
+          ./waf configure --board ZEROH743
+          ./waf plane
+          mkdir -p firmware_output
+          cp Tools/bootloaders/ZEROH743_bl.* firmware_output/
+          cp build/ZEROH743/bin/arduplane* firmware_output/
+          ls -lh firmware_output/
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZEROH743-ArduPlane-VTOL-Firmware
+          path: firmware_output/*
+          if-no-files-found: error
