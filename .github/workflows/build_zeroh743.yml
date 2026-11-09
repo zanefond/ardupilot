@@ -15,36 +15,27 @@ jobs:
     runs-on: ubuntu-22.04
     container: ardupilot/ardupilot-dev-chibios:v0.2.0
     steps:
-      - name: Checkout repository with submodules
+      - name: Checkout ArduPilot Stable repository with submodules
         uses: actions/checkout@v4
         with:
+          repository: 'ArduPilot/ardupilot'
+          ref: 'ArduPlane-stable'
           submodules: 'recursive'
 
-      - name: Switch to ArduPilot Stable (Plane Stable)
+      - name: Checkout ZEROH743 hwdef definitions
+        uses: actions/checkout@v4
+        with:
+          repository: 'zanefond/ardupilot'
+          ref: 'build-zeroh743'
+          path: 'zeroh743-repo'
+
+      - name: Setup ZEROH743 Board Definition
         shell: bash
         run: |
           git config --global --add safe.directory "*"
-          
-          # Backup ZEROH743 board definition
-          mkdir -p /tmp/zeroh743_backup
-          cp -r libraries/AP_HAL_ChibiOS/hwdef/ZEROH743/* /tmp/zeroh743_backup/
-          
-          # Fetch upstream stable
-          git remote add upstream https://github.com/ArduPilot/ardupilot.git || git remote set-url upstream https://github.com/ArduPilot/ardupilot.git
-          git fetch --tags upstream
-          
-          # Checkout stable tag (ArduPlane-stable points to latest Plane stable release, e.g. Plane-4.7.2)
-          STABLE_TAG="ArduPlane-stable"
-          echo "Checking out ArduPilot Stable tag: ${STABLE_TAG}"
-          git checkout ${STABLE_TAG}
-          git submodule sync --recursive
-          git submodule update --init --recursive
-          
-          # Restore ZEROH743 board definition
           mkdir -p libraries/AP_HAL_ChibiOS/hwdef/ZEROH743
-          cp /tmp/zeroh743_backup/* libraries/AP_HAL_ChibiOS/hwdef/ZEROH743/
-          
-          echo "=== ArduPilot Version Info ==="
+          cp -v zeroh743-repo/libraries/AP_HAL_ChibiOS/hwdef/ZEROH743/* libraries/AP_HAL_ChibiOS/hwdef/ZEROH743/
+          echo "=== ArduPilot Stable Version Info ==="
           git describe --tags --always
           git log -1 --oneline
 
