@@ -35,6 +35,7 @@ jobs:
           git config --global --add safe.directory "*"
           mkdir -p libraries/AP_HAL_ChibiOS/hwdef/ZEROH743
           cp -v zeroh743-repo/libraries/AP_HAL_ChibiOS/hwdef/ZEROH743/* libraries/AP_HAL_ChibiOS/hwdef/ZEROH743/
+          rm -rf zeroh743-repo
           echo "=== ArduPilot Stable Version Info ==="
           git describe --tags --always
           git log -1 --oneline
